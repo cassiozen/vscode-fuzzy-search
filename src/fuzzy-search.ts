@@ -1,6 +1,13 @@
 import * as vscode from 'vscode';
+import { QuickInputButton, Uri } from 'vscode';
 import Search from './search';
 import { Item } from './types';
+
+async function getType(uri: Uri) {
+  const file = await vscode.workspace.openTextDocument(uri);
+
+  return file.languageId;
+}
 
 export default class FuzzySearch {
   private search = new Search();
@@ -11,9 +18,12 @@ export default class FuzzySearch {
     this.onDidChangeValue = this.onDidChangeValue.bind(this);
     this.onAccept = this.onAccept.bind(this);
 
-    this.search.onData(filePaths => {
+    this.search.onData(async filePaths => {
       try {
-        this.quickPick.items = filePaths;
+        this.quickPick.items = await Promise.all(filePaths.map(async item => {
+          const type = await getType(item.uri);
+          return { ...item, label: item.label.replace(`??language??`, type) };
+        }));
       } finally {
         this.quickPick.busy = false;
       }
@@ -22,8 +32,11 @@ export default class FuzzySearch {
     this.quickPick.placeholder = "Fuzzy search";
     this.quickPick.matchOnDescription = true;
     this.quickPick.matchOnDetail = true;
+    (this.quickPick as any).sortByLabel = false;
+
     this.quickPick.onDidChangeValue(this.onDidChangeValue);
     this.quickPick.onDidAccept(this.onAccept);
+
     this.quickPick.show();
 
     this.find(' ');
