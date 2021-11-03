@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
+import fileType from './helpers/file-type';
 
 interface DataResultCallback {
   (filePaths: Item[]): void
@@ -65,11 +66,12 @@ export default class Search {
             .filter(filePath => filePath.trim() !== '')
             .map((filePath) => {
                 const uri = vscode.Uri.file(filePath);
+                const typeName = fileType(uri);
 
                 return {
-                  label: `$(??language??) ${path.parse(filePath).dir.replace(/.*(\/|\\)/, '')}/${path.parse(filePath).base}`,
+                  label: `$(${typeName}) ${path.parse(filePath).dir.replace(/.*(\/|\\)/, '')}/${path.parse(filePath).base}`,
                   description: this.searchString,
-                  detail: `$(folder) ${path.parse(filePath).dir.replace(workspacePath || '', '')}`,
+                  detail: `$(folder) ${path.parse(filePath).dir.replace(`${workspacePath}/` || '', '')}`,
                   awaysShow: true,
                   uri
                 };

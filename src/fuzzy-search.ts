@@ -20,10 +20,7 @@ export default class FuzzySearch {
 
     this.search.onData(async filePaths => {
       try {
-        this.quickPick.items = await Promise.all(filePaths.map(async item => {
-          const type = await getType(item.uri);
-          return { ...item, label: item.label.replace(`??language??`, type) };
-        }));
+        this.quickPick.items = filePaths;
       } finally {
         this.quickPick.busy = false;
       }
