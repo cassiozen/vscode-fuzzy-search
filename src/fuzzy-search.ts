@@ -38,7 +38,7 @@ export default class FuzzySearch {
 
     this.quickPick.show();
 
-    this.find(' ');
+    this.find('');
   }
 
   private onDidChangeValue(value: string) {
