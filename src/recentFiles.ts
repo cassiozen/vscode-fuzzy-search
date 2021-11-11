@@ -13,16 +13,16 @@ export default class RecentFiles {
     this.searchResults = [];
   }
 
-  invertFilePath(filePath: string) {
+  shortenFilePath(filePath: string) {
     const parsed = path.parse(filePath);
     const workspacePath =
     vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.path;
-    return parsed.base + filePath.replace(`${workspacePath}/` || '', '');
+    return filePath.replace(`${workspacePath}` || '', '') + parsed.base;
   }
 
   addFile(filePath: string) {
     if (!this.includes(filePath)) {
-      this.recentFiles.unshift({key:this.invertFilePath(filePath), filePath: filePath});
+      this.recentFiles.unshift({key:this.shortenFilePath(filePath), filePath: filePath});
       this.workspaceState.update('recents', this.recentFiles);
     }
   }
