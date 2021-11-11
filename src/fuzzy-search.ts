@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
-import { QuickInputButton, Uri } from 'vscode';
+import { Uri } from 'vscode';
+import filePathToQuickPickItem from './helpers/filePathToQuickPickItem';
+import RecentFiles from './recentFiles';
 import Search from './search';
-import { Item } from './types';
+import { QuickPickItem } from './types';
 
 async function getType(uri: Uri) {
   const file = await vscode.workspace.openTextDocument(uri);
@@ -11,16 +13,24 @@ async function getType(uri: Uri) {
 
 export default class FuzzySearch {
   private search = new Search();
-  private quickPick = vscode.window.createQuickPick<Item>();
+  private recentFiles: RecentFiles;
+  private quickPick = vscode.window.createQuickPick<QuickPickItem>();
   private timeout: any;
 
-  constructor() {
+  constructor(context: vscode.ExtensionContext) {
+    this.recentFiles = new RecentFiles(context);
     this.onDidChangeValue = this.onDidChangeValue.bind(this);
     this.onAccept = this.onAccept.bind(this);
 
-    this.search.onData(async filePaths => {
+    this.search.onData(async searchItems => {
       try {
-        this.quickPick.items = filePaths;
+        const quickPickItems = [...new Set([...this.recentFiles.searchResults, ...searchItems])]
+          .slice(0, 10)
+          .map((filePath) =>
+            filePathToQuickPickItem(filePath, this.recentFiles.searchResults.includes(filePath))
+          );
+
+        this.quickPick.items = quickPickItems;
       } finally {
         this.quickPick.busy = false;
       }
@@ -28,7 +38,6 @@ export default class FuzzySearch {
 
     this.quickPick.placeholder = "Fuzzy search";
     this.quickPick.matchOnDescription = true;
-    this.quickPick.matchOnDetail = true;
     (this.quickPick as any).sortByLabel = false;
 
     this.quickPick.onDidChangeValue(this.onDidChangeValue);
@@ -39,26 +48,31 @@ export default class FuzzySearch {
     this.find(' ');
   }
 
-  private onDidChangeValue(value: String) {
+  private onDidChangeValue(value: string) {
     this.find(value);
   }
 
-  private find(value: String) {
+  private find(value: string) {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
 
     this.timeout = setTimeout(() => {
       this.quickPick.busy = true;
-      this.search.search(value.toString());
+      const searchTerm = value.toString();
+      this.recentFiles.search(searchTerm);
+      this.search.search(searchTerm);
     }, 200);
   }
 
   onAccept(e: any) {
-    this.quickPick.selectedItems[0].uri
-    && vscode.workspace.openTextDocument(this.quickPick.selectedItems[0].uri).then(doc => {
-      vscode.window.showTextDocument(doc);
-    });
+    const selectedItem = this.quickPick.selectedItems[0].filePath;
+    if (selectedItem) {
+      this.recentFiles.addFile(selectedItem);
+      vscode.workspace.openTextDocument(vscode.Uri.file(selectedItem)).then((doc) => {
+        vscode.window.showTextDocument(doc);
+      });
+    }
     this.quickPick.hide();
   }
 }

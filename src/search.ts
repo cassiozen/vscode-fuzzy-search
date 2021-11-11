@@ -1,12 +1,11 @@
-import { Item } from './types';
+import { QuickPickItem } from './types';
 const { spawn } = require('child_process');
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import fileType from './helpers/file-type';
 
 interface DataResultCallback {
-  (filePaths: Item[]): void
+  (filePaths: string[]): void;
 }
 
 function getOsPath(): String {
@@ -43,7 +42,7 @@ export default class Search {
   private fzfPath = getFzfPath();
   private fdPath = getFdPath();
   private onDataListeners: DataResultCallback[];
-  private fileNames: Item[];
+  private fileNames: string[];
   private searchString: string;
 
   constructor(){
@@ -57,25 +56,11 @@ export default class Search {
   }
 
   private async onResultData(data: string) {
-    const workspacePath = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.path;
-
     this.fileNames = this.fileNames
       .concat(
-          data.toString()
-            .split('\n')
-            .filter(filePath => filePath.trim() !== '')
-            .map((filePath) => {
-                const uri = vscode.Uri.file(filePath);
-                const typeName = fileType(uri);
-
-                return {
-                  label: `$(${typeName}) ${path.parse(filePath).dir.replace(/.*(\/|\\)/, '')}/${path.parse(filePath).base}`,
-                  description: this.searchString,
-                  detail: `$(folder) ${path.parse(filePath).dir.replace(`${workspacePath}/` || '', '')}`,
-                  awaysShow: true,
-                  uri
-                };
-            })
+        data.toString()
+          .split('\n')
+          .filter(filePath => filePath.trim() !== '')
       ).slice(0, 10);
 
     this.onDataListeners.forEach(listener => listener(this.fileNames));

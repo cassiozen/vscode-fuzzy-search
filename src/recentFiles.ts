@@ -1,0 +1,43 @@
+import * as vscode from 'vscode';
+import { search as fuzzySearch } from 'fast-fuzzy';
+import * as path from 'path';
+
+export default class RecentFiles {
+  recentFiles: {key:string, filePath:string}[];
+  searchResults: string[];
+  workspaceState: vscode.Memento;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.workspaceState = context.workspaceState;
+    this.recentFiles = this.workspaceState.get('recents', []);
+    this.searchResults = [];
+  }
+
+  invertFilePath(filePath: string) {
+    const parsed = path.parse(filePath);
+    const workspacePath =
+    vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.path;
+    return parsed.base + filePath.replace(`${workspacePath}/` || '', '');
+  }
+
+  addFile(filePath: string) {
+    if (!this.includes(filePath)) {
+      this.recentFiles.unshift({key:this.invertFilePath(filePath), filePath: filePath});
+      this.workspaceState.update('recents', this.recentFiles);
+    }
+  }
+
+  includes(filePath: string) {
+    return !!this.recentFiles.find(item => item.filePath === filePath);
+  }
+
+  search(text: string) {
+    const searchTerm = text.trim();
+    const results =
+      searchTerm.length > 0
+        ? fuzzySearch(text, this.recentFiles, { threshold: 0.7, keySelector: (obj) => obj.key })
+        : this.recentFiles;
+
+    this.searchResults = results.map(r => r.filePath);
+  }
+}
