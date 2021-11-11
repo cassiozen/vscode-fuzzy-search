@@ -14,7 +14,7 @@ export default function filePathToQuickPickItem(
 
   return {
     label: `$(${typeName}) ${path.parse(filePath).base}`,
-    description: `${path.parse(filePath).dir.replace(`${workspacePath}/` || '', '')}/${
+    description: `${path.parse(filePath).dir.replace(`${workspacePath}` || '', '')}${
       isRecent ? '  $(clock)' : ''
     }`,
     alwaysShow: true,
