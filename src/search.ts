@@ -43,12 +43,10 @@ export default class Search {
   private fdPath = getFdPath();
   private onDataListeners: DataResultCallback[];
   private fileNames: string[];
-  private searchString: string;
 
   constructor(){
     this.onDataListeners = [];
     this.fileNames = [];
-    this.searchString = '';
 
     this.onResultData = this.onResultData.bind(this);
 
@@ -68,7 +66,6 @@ export default class Search {
 
   search(text: string): void {
     this.fileNames = [];
-    this.searchString = text;
     const command = buildSearch(this.fdPath, this.fzfPath, text.replace(/::/g, '').toLowerCase());
 
     this.sh.stdin.write(Buffer.from(command));

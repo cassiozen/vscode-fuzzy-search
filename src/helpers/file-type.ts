@@ -63,7 +63,5 @@ const extensionsMap = {
 export default function fileType(file: vscode.Uri){
   const extension = (file.toString().substring(file.toString().lastIndexOf(".")+1) as keyof Object);
 
-  console.log(extensionsMap[extension]);
-
   return extensionsMap[extension] ? extensionsMap[extension].toString().toLowerCase() : 'file';
 }

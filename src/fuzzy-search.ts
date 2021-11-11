@@ -1,15 +1,8 @@
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
 import filePathToQuickPickItem from './helpers/filePathToQuickPickItem';
 import RecentFiles from './recentFiles';
 import Search from './search';
 import { QuickPickItem } from './types';
-
-async function getType(uri: Uri) {
-  const file = await vscode.workspace.openTextDocument(uri);
-
-  return file.languageId;
-}
 
 export default class FuzzySearch {
   private search = new Search();
