@@ -17,7 +17,7 @@ export default class RecentFiles {
     const parsed = path.parse(filePath);
     const workspacePath =
     vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.path;
-    return parsed.base + filePath.replace(`${workspacePath}/` || '', '');
+    return filePath.replace(`${workspacePath}` || '', '') + parsed.base;
   }
 
   addFile(filePath: string) {
