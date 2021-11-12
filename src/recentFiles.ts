@@ -21,10 +21,14 @@ export default class RecentFiles {
   }
 
   addFile(filePath: string) {
-    if (!this.includes(filePath)) {
+    const existing = this.recentFiles.find(result => result.filePath === filePath);
+    if (existing) {
+      this.recentFiles = this.recentFiles.filter(result => result !== existing);
+      this.recentFiles.unshift(existing);
+    } else {
       this.recentFiles.unshift({key:this.shortenFilePath(filePath), filePath: filePath});
-      this.workspaceState.update('recents', this.recentFiles);
     }
+    this.workspaceState.update('recents', this.recentFiles);
   }
 
   includes(filePath: string) {
